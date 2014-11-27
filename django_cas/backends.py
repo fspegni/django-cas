@@ -38,6 +38,8 @@ def _verify_cas2(ticket, service):
     Returns username on success and None on failure.
     """
 
+    print "cas2 ticket: %s" % ticket
+
     try:
         from xml.etree import ElementTree
     except ImportError:
@@ -112,6 +114,8 @@ def verify_proxy_ticket(ticket, service):
 
 _PROTOCOLS = {'1': _verify_cas1, '2': _verify_cas2}
 
+print "cas version: %s" % settings.CAS_VERSION
+
 if settings.CAS_VERSION not in _PROTOCOLS:
     raise ValueError('Unsupported CAS_VERSION %r' % settings.CAS_VERSION)
 
@@ -127,6 +131,9 @@ class CASBackend(object):
         """Verifies CAS ticket and gets or creates User object
            NB: Use of PT to identify proxy
         """
+
+        print "cas auth backend: %s -> %s ..." % (ticket, service)
+
         username, authentication_response = _verify(ticket, service)
         if not username:
             return None
@@ -137,7 +144,7 @@ class CASBackend(object):
             user = User(username=username, email=username)
             user.set_unusable_password()
 
-        if authentication_response and _CAS_USER_DETAILS_RESOLVER:
+        if authentication_response is not None and _CAS_USER_DETAILS_RESOLVER is not None:
             _CAS_USER_DETAILS_RESOLVER(user, authentication_response)
 
         user.save()
@@ -145,6 +152,8 @@ class CASBackend(object):
 
     def get_user(self, user_id):
         """Retrieve the user's entry in the User model if it exists"""
+
+        print "cas get user: %s ..." % user_id
 
         try:
             return User.objects.get(pk=user_id)

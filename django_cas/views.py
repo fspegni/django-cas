@@ -46,15 +46,24 @@ def _redirect_url(request):
 
 def _login_url(service, ticket='ST'):
     """Generates CAS login URL"""
+
+    print "login url: %s" % ticket
+
     LOGINS = {'ST':'login',
               'PT':'proxyValidate'}
     params = {'service': service}
     if settings.CAS_EXTRA_LOGIN_PARAMS:
         params.update(settings.CAS_EXTRA_LOGIN_PARAMS)
+
+    print "params: %s" % params
+
     if not ticket:
         ticket = 'ST'
     login = LOGINS.get(ticket[:2],'login')
-    return urljoin(settings.CAS_SERVER_URL, login) + '?' + urlencode(params)
+    res = urljoin(settings.CAS_SERVER_URL, login) + '?' + urlencode(params)
+
+    print "final url: %s" % res
+    return res
 
 
 def _logout_url(request, next_page=None):
@@ -70,6 +79,8 @@ def _logout_url(request, next_page=None):
 
 def login(request, next_page=None, required=False):
     """Forwards to CAS login URL or verifies CAS ticket"""
+
+    print "cas login required: %s" % required
 
     if not next_page:
         next_page = _redirect_url(request)
@@ -90,6 +101,7 @@ def login(request, next_page=None, required=False):
             messages.success(request, message)
             return HttpResponseRedirect(next_page)
         elif settings.CAS_RETRY_LOGIN or required:
+            print "retry: %s, required: %s" % (settings.CAS_RETRY_LOGIN, required)
             return HttpResponseRedirect(_login_url(service, ticket))
         else:
             error = "<h1>Forbidden</h1><p>Login failed.</p>"
