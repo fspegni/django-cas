@@ -53,8 +53,13 @@ def _verify_cas2(ticket, service):
     url = (urljoin(settings.CAS_SERVER_URL, 'proxyValidate') + '?' +
            urllib.urlencode(params))
 
+    print "ready to open url: %s" % url
+
     page = urllib.urlopen(url)
     response = page.read()
+
+#    print "raw response: %s" % response
+
     tree = ElementTree.fromstring(response)
     page.close()
 
@@ -73,8 +78,13 @@ def _verify_cas2(ticket, service):
                 Tgt.objects.create(username = username, tgt = pgtIou.tgt)
 
             pgtIou.delete()
+
+        print "returning username: %s" % username
+
         return username, tree
     else:
+
+        print "returning none :( ..."
         return None, tree
 
 

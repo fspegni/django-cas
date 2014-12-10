@@ -41,6 +41,8 @@ def _redirect_url(request):
                   request.get_host())
         if next.startswith(prefix):
             next = next[len(prefix):]
+
+    print "redirect url found: %s" % next
     return next
 
 
@@ -81,9 +83,13 @@ def login(request, next_page=None, required=False):
     """Forwards to CAS login URL or verifies CAS ticket"""
 
     print "cas login required: %s" % required
+    print "next page: %s" % next_page
 
     if not next_page:
         next_page = _redirect_url(request)
+        print "new next page: %s" % next_page
+
+
     if request.user.is_authenticated():
         message = "You are logged in as %s." % request.user.username
         messages.success(request, message)
@@ -104,13 +110,14 @@ def login(request, next_page=None, required=False):
             print "retry: %s, required: %s" % (settings.CAS_RETRY_LOGIN, required)
             return HttpResponseRedirect(_login_url(service, ticket))
         else:
+            print "no user, no retry, no party"
             error = "<h1>Forbidden</h1><p>Login failed.</p>"
             return HttpResponseForbidden(error)
     else:
         return HttpResponseRedirect(_login_url(service, ticket))
 
 
-def logout(request, next_page=None):
+def logout(request, next_page=None, *args, **kwargs):
     """Redirects to CAS logout page"""
 
     from django.contrib.auth import logout

@@ -81,6 +81,8 @@ class CASWithGatewayMiddleware(CASMiddleware):
         res = super(CASWithGatewayMiddleware, self).process_view(request,
                 view_func, view_args, view_kwargs)
 
+        print "base res: %s" % res
+
         if res == None:
             res = self._cas_gateway(request, view_func)
 
@@ -92,8 +94,10 @@ class CASWithGatewayMiddleware(CASMiddleware):
         if request.user and request.user.is_authenticated():
             return None
 
+        print "view func: %s" % view_func
+
         if view_func == cas_login or view_func == cas_logout:
-#            print "found cas_login/cas_logout ... exit ..."
+            print "found cas_login/cas_logout ... exit ..."
             return None
 
         gw_param = getattr(settings, "CAS_GATEWAY_PARAMETER", "gateway")
@@ -102,18 +106,20 @@ class CASWithGatewayMiddleware(CASMiddleware):
         gateway = request.REQUEST.get(gw_loop_param, "1")
         ticket = request.REQUEST.get("ticket","")
 
-#        print "gateway: %s" % gateway
-#        print "ticket: %s" % ticket
+        print "gateway: %s" % gateway
+        print "ticket: %s" % ticket
+        print "request path: %s" % request.build_absolute_uri()
 
         if gateway != "0":
             orig_params = request.GET.copy()
             if gw_loop_param in orig_params:
                 del orig_params[gw_loop_param]
-#            print "gateway mode (URI: %s)..." % request.build_absolute_uri()
+            print "gateway mode (URI: %s)..." % request.build_absolute_uri()
 
             params = urlencode({ "service": "http://" + request.get_host() + "/?%s=0" % gw_loop_param })
             url = settings.CAS_SERVER_URL + ('login?%s=1&' % gw_param) + params
-#            print "redirect to: %s" % url
+            print "redirect to: %s" % url
+
             return HttpResponseRedirect(url)
 
         else:
